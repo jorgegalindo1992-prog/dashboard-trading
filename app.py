@@ -1,4 +1,5 @@
 import streamlit as st
+import streamlit.components.v1 as components
 import yfinance as yf
 import plotly.graph_objects as go
 import pandas as pd
@@ -65,20 +66,39 @@ with tab_bot:
     st.info("💡 La conexión con la base de datos `trading.db` leerá automáticamente estos valores cuando tu bot ejecute operaciones.")
 
 # ---------------------------------------------------------
-# PESTAÑA 2: Rotación de Mercado + Matriz
+# PESTAÑA 2: Rotación de Mercado + TradingView Heatmap + Matriz
 # ---------------------------------------------------------
 with tab_mercado:
     
-    # --- SECCIÓN 1: FINVIZ MAPA DE CALOR S&P 500 ---
-    st.markdown("### 🗺️ Mapa de Calor del Mercado EE.UU. (Finviz S&P 500)")
+    # --- SECCIÓN 1: TRADINGVIEW MAPA DE CALOR S&P 500 ---
+    st.markdown("### 🗺️ Mapa de Calor del Mercado EE.UU. (S&P 500)")
     
-    col_btn, col_img = st.columns([1, 4])
-    with col_btn:
-        st.write("Visita la versión interactiva completa:")
-        st.link_button("🔥 Abrir Finviz Map", "https://finviz.com/map.ashx?t=sec", type="primary")
+    # Widget embebido de TradingView
+    tradingview_html = """
+    <div class="tradingview-widget-container" style="height: 550px; width: 100%;">
+      <div class="tradingview-widget-container__widget" style="height: 100%; width: 100%;"></div>
+      <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-stock-heatmap.js" async>
+      {
+      "exchanges": [],
+      "dataSource": "SPX500",
+      "grouping": "sector",
+      "blockSize": "market_cap_basic",
+      "blockColor": "change",
+      "locale": "es",
+      "symbolUrl": "",
+      "colorTheme": "dark",
+      "hasTopBar": true,
+      "isDataSetEnabled": true,
+      "isZoomEnabled": true,
+      "hasSymbolTooltip": true,
+      "width": "100%",
+      "height": "100%"
+    }
+      </script>
+    </div>
+    """
     
-    # Vista estática o integración mediante gráfico alternativo
-    st.image("https://charts2.finviz.com/chart.ashx?t=SPY&ty=c&ta=0&p=d&s=l", caption="Vista de referencia S&P 500 (SPY)", width=600)
+    components.html(tradingview_html, height=560)
 
     st.markdown("---")
 
