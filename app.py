@@ -73,32 +73,34 @@ with tab_mercado:
     # --- SECCIÓN 1: TRADINGVIEW MAPA DE CALOR S&P 500 ---
     st.markdown("### 🗺️ Mapa de Calor del Mercado EE.UU. (S&P 500)")
     
-    # Widget embebido de TradingView
+    # Dimensiones en pantalla: ~25 cm de ancho (950px) x ~13 cm de alto (500px)
     tradingview_html = """
-    <div class="tradingview-widget-container" style="height: 550px; width: 100%;">
-      <div class="tradingview-widget-container__widget" style="height: 100%; width: 100%;"></div>
-      <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-stock-heatmap.js" async>
-      {
-      "exchanges": [],
-      "dataSource": "SPX500",
-      "grouping": "sector",
-      "blockSize": "market_cap_basic",
-      "blockColor": "change",
-      "locale": "es",
-      "symbolUrl": "",
-      "colorTheme": "dark",
-      "hasTopBar": true,
-      "isDataSetEnabled": true,
-      "isZoomEnabled": true,
-      "hasSymbolTooltip": true,
-      "width": "100%",
-      "height": "100%"
-    }
-      </script>
+    <div style="display: flex; justify-content: center; width: 100%;">
+        <div class="tradingview-widget-container" style="height: 500px; width: 950px; max-width: 100%;">
+          <div class="tradingview-widget-container__widget" style="height: 100%; width: 100%;"></div>
+          <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-stock-heatmap.js" async>
+          {
+          "exchanges": [],
+          "dataSource": "SPX500",
+          "grouping": "sector",
+          "blockSize": "market_cap_basic",
+          "blockColor": "change",
+          "locale": "es",
+          "symbolUrl": "",
+          "colorTheme": "dark",
+          "hasTopBar": true,
+          "isDataSetEnabled": true,
+          "isZoomEnabled": true,
+          "hasSymbolTooltip": true,
+          "width": "100%",
+          "height": "100%"
+        }
+          </script>
+        </div>
     </div>
     """
     
-    components.html(tradingview_html, height=560)
+    components.html(tradingview_html, height=520)
 
     st.markdown("---")
 
