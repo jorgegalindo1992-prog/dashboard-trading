@@ -1,4 +1,5 @@
 import streamlit as st
+import streamlit.components.v1 as components
 import yfinance as yf
 import plotly.graph_objects as go
 import pandas as pd
@@ -48,7 +49,7 @@ st.markdown("""
 
 st.title("🤖 BOT OPCIONES - DASHBOARD")
 
-tab_bot, tab_mercado = st.tabs(["📊 ESTADO DEL BOT", "🌍 ROTACIÓN DE MERCADO (VALUE vs GROWTH)"])
+tab_bot, tab_mercado = st.tabs(["📊 ESTADO DEL BOT", "🌍 ROTACIÓN DE MERCADO & FINVIZ"])
 
 # ---------------------------------------------------------
 # PESTAÑA 1: Estado del Bot
@@ -65,12 +66,22 @@ with tab_bot:
     st.info("💡 La conexión con la base de datos `trading.db` leerá automáticamente estos valores cuando tu bot ejecute operaciones.")
 
 # ---------------------------------------------------------
-# PESTAÑA 2: Rotación de Mercado + Matriz US Equity Factors
+# PESTAÑA 2: Rotación de Mercado + Finviz Heatmap + Matriz
 # ---------------------------------------------------------
 with tab_mercado:
-    st.subheader("Flujo de Capitales: US Equity Factors")
+    
+    # --- SECCIÓN 1: FINVIZ MAPA DE CALOR S&P 500 ---
+    st.markdown("### 🗺️ Mapa de Calor del Mercado EE.UU. (Finviz S&P 500)")
+    
+    components.iframe(
+        src="https://finviz.com/map.ashx?t=sec",
+        height=650,
+        scrolling=True
+    )
 
-    # --- SECCIÓN 1: MATRIZ DE ESTILO (3x3) ---
+    st.markdown("---")
+
+    # --- SECCIÓN 2: MATRIZ DE ESTILO (3x3) ---
     st.markdown("### 📊 US Equity Factors (1-Day Performance)")
     
     etfs_matriz = {
@@ -79,14 +90,12 @@ with tab_mercado:
         'Small': {'Value': 'IJS', 'Core': 'IJR', 'Growth': 'IJT'}
     }
     
-    # Lista de tickers a descargar
     tickers_list = [etfs_matriz[r][c] for r in etfs_matriz for c in etfs_matriz[r]]
     
     try:
         data_matrix = yf.download(tickers_list, period='2d')['Close']
         cambio_pct = ((data_matrix.iloc[-1] - data_matrix.iloc[-2]) / data_matrix.iloc[-2]) * 100
         
-        # Construcción del DataFrame para el Heatmap
         filas = ['Large', 'Mid', 'Small']
         columnas = ['Value', 'Core', 'Growth']
         
@@ -104,7 +113,6 @@ with tab_mercado:
             matriz_valores.append(v_fila)
             matriz_texto.append(t_fila)
 
-        # Crear Heatmap estilo Plotly Dark
         fig_matrix = go.Figure(data=go.Heatmap(
             z=matriz_valores,
             x=columnas,
@@ -136,7 +144,7 @@ with tab_mercado:
 
     st.markdown("---")
 
-    # --- SECCIÓN 2: TENDENCIA TEMPORAL VALUE vs GROWTH ---
+    # --- SECCIÓN 3: TENDENCIA TEMPORAL VALUE vs GROWTH ---
     st.markdown("### 📈 Tendencia de Mediano Plazo")
     periodo = st.selectbox("Temporalidad del análisis", ["1mo", "3mo", "6mo", "1y"], index=1)
     
