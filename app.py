@@ -73,11 +73,11 @@ with tab_mercado:
     # --- SECCIÓN 1: TRADINGVIEW MAPA DE CALOR S&P 500 ---
     st.markdown("### 🗺️ Mapa de Calor del Mercado EE.UU. (S&P 500)")
     
-    # MEDIDAS FIJAS: Ancho 950px (~25 cm) x Alto 500px (~13 cm)
+    # Ancho 100% (cubre toda la pantalla wide) x Alto 500px (~13 cm)
     tradingview_html = """
-    <div style="width: 100%; display: flex; justify-content: flex-start;">
-        <div class="tradingview-widget-container" style="height: 500px; width: 950px; min-height: 500px; max-width: 100%;">
-          <div class="tradingview-widget-container__widget" style="height: 500px; width: 950px;"></div>
+    <div style="width: 100%;">
+        <div class="tradingview-widget-container" style="height: 500px; width: 100%;">
+          <div class="tradingview-widget-container__widget" style="height: 500px; width: 100%;"></div>
           <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-stock-heatmap.js" async>
           {
           "exchanges": [],
@@ -92,7 +92,7 @@ with tab_mercado:
           "isDataSetEnabled": true,
           "isZoomEnabled": true,
           "hasSymbolTooltip": true,
-          "width": "950",
+          "width": "100%",
           "height": "500"
         }
           </script>
@@ -100,7 +100,6 @@ with tab_mercado:
     </div>
     """
     
-    # Fijamos la altura del iframe de Streamlit
     components.html(tradingview_html, height=530)
 
     st.markdown("---")
