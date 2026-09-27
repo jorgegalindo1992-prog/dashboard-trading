@@ -1,5 +1,4 @@
 import streamlit as st
-import streamlit.components.v1 as components
 import yfinance as yf
 import plotly.graph_objects as go
 import pandas as pd
@@ -49,7 +48,7 @@ st.markdown("""
 
 st.title("🤖 BOT OPCIONES - DASHBOARD")
 
-tab_bot, tab_mercado = st.tabs(["📊 ESTADO DEL BOT", "🌍 ROTACIÓN DE MERCADO & FINVIZ"])
+tab_bot, tab_mercado = st.tabs(["📊 ESTADO DEL BOT", "🌍 ROTACIÓN DE MERCADO"])
 
 # ---------------------------------------------------------
 # PESTAÑA 1: Estado del Bot
@@ -66,18 +65,20 @@ with tab_bot:
     st.info("💡 La conexión con la base de datos `trading.db` leerá automáticamente estos valores cuando tu bot ejecute operaciones.")
 
 # ---------------------------------------------------------
-# PESTAÑA 2: Rotación de Mercado + Finviz Heatmap + Matriz
+# PESTAÑA 2: Rotación de Mercado + Matriz
 # ---------------------------------------------------------
 with tab_mercado:
     
     # --- SECCIÓN 1: FINVIZ MAPA DE CALOR S&P 500 ---
     st.markdown("### 🗺️ Mapa de Calor del Mercado EE.UU. (Finviz S&P 500)")
     
-    components.iframe(
-        src="https://finviz.com/map.ashx?t=sec",
-        height=650,
-        scrolling=True
-    )
+    col_btn, col_img = st.columns([1, 4])
+    with col_btn:
+        st.write("Visita la versión interactiva completa:")
+        st.link_button("🔥 Abrir Finviz Map", "https://finviz.com/map.ashx?t=sec", type="primary")
+    
+    # Vista estática o integración mediante gráfico alternativo
+    st.image("https://charts2.finviz.com/chart.ashx?t=SPY&ty=c&ta=0&p=d&s=l", caption="Vista de referencia S&P 500 (SPY)", width=600)
 
     st.markdown("---")
 
