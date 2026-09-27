@@ -73,33 +73,35 @@ with tab_mercado:
     # --- SECCIÓN 1: TRADINGVIEW MAPA DE CALOR S&P 500 ---
     st.markdown("### 🗺️ Mapa de Calor del Mercado EE.UU. (S&P 500)")
     
-    # HTML expansivo con altura aumentada a 650px
+    # MEDIDAS FIJAS: Ancho 950px (~25 cm) x Alto 500px (~13 cm)
     tradingview_html = """
-    <div class="tradingview-widget-container" style="height: 650px; width: 100%;">
-      <div class="tradingview-widget-container__widget" style="height: 100%; width: 100%;"></div>
-      <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-stock-heatmap.js" async>
-      {
-      "exchanges": [],
-      "dataSource": "SPX500",
-      "grouping": "sector",
-      "blockSize": "market_cap_basic",
-      "blockColor": "change",
-      "locale": "es",
-      "symbolUrl": "",
-      "colorTheme": "dark",
-      "hasTopBar": true,
-      "isDataSetEnabled": true,
-      "isZoomEnabled": true,
-      "hasSymbolTooltip": true,
-      "width": "100%",
-      "height": "100%"
-    }
-      </script>
+    <div style="width: 100%; display: flex; justify-content: flex-start;">
+        <div class="tradingview-widget-container" style="height: 500px; width: 950px; min-height: 500px; max-width: 100%;">
+          <div class="tradingview-widget-container__widget" style="height: 500px; width: 950px;"></div>
+          <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-stock-heatmap.js" async>
+          {
+          "exchanges": [],
+          "dataSource": "SPX500",
+          "grouping": "sector",
+          "blockSize": "market_cap_basic",
+          "blockColor": "change",
+          "locale": "es",
+          "symbolUrl": "",
+          "colorTheme": "dark",
+          "hasTopBar": true,
+          "isDataSetEnabled": true,
+          "isZoomEnabled": true,
+          "hasSymbolTooltip": true,
+          "width": "950",
+          "height": "500"
+        }
+          </script>
+        </div>
     </div>
     """
     
-    # Se pasa la altura de 670px a Streamlit para asegurar espacio vertical suficiente
-    components.html(tradingview_html, height=670)
+    # Fijamos la altura del iframe de Streamlit
+    components.html(tradingview_html, height=530)
 
     st.markdown("---")
 
