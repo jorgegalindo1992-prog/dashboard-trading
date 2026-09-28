@@ -52,23 +52,24 @@ st.markdown("""
 st.title("🤖 BOT OPCIONES - DASHBOARD")
 
 # ---------------------------------------------------------
-# FUNCIÓN DE EXTRACCIÓN DE NOTICIAS EN TIEMPO REAL (RSS)
+# EXTRACCIÓN DE NOTICIAS EN TIEMPO REAL EN ESPAÑOL (RSS)
 # ---------------------------------------------------------
 @st.cache_data(ttl=300) # Se actualiza automáticamente cada 5 minutos
-def fetch_live_news():
+def fetch_live_news_es():
+    # Feeds parametrizados para obtener los titulares traducidos/redactados en español
     rss_urls = {
-        "macro": "https://news.google.com/rss/search?q=US+economy+inflation+Federal+Reserve&hl=en-US&gl=US&ceid=US:en",
-        "petroleo": "https://news.google.com/rss/search?q=crude+oil+prices+OPEC&hl=en-US&gl=US&ceid=US:en",
-        "semiconductores": "https://news.google.com/rss/search?q=semiconductors+Nvidia+TSMC+chips&hl=en-US&gl=US&ceid=US:en",
-        "software": "https://news.google.com/rss/search?q=software+stocks+cloud+AI&hl=en-US&gl=US&ceid=US:en",
-        "bonos": "https://news.google.com/rss/search?q=US+Treasury+bonds+yields&hl=en-US&gl=US&ceid=US:en"
+        "macro": "https://news.google.com/rss/search?q=economia+EEUU+inflacion+Reserva+Federal&hl=es-419&gl=US&ceid=US:es-419",
+        "petroleo": "https://news.google.com/rss/search?q=precio+petroleo+crudo+OPEP&hl=es-419&gl=US&ceid=US:es-419",
+        "semiconductores": "https://news.google.com/rss/search?q=semiconductores+Nvidia+TSMC+chips&hl=es-419&gl=US&ceid=US:es-419",
+        "software": "https://news.google.com/rss/search?q=acciones+software+inteligencia+artificial+nube&hl=es-419&gl=US&ceid=US:es-419",
+        "bonos": "https://news.google.com/rss/search?q=bonos+del+tesoro+EEUU+rendimiento&hl=es-419&gl=US&ceid=US:es-419"
     }
     
     live_data = {}
     for cat, url in rss_urls.items():
         feed = feedparser.parse(url)
         items = []
-        for entry in feed.entries[:7]: # Tomamos las 7 más recientes por categoría
+        for entry in feed.entries[:8]: # 8 noticias más recientes por categoría
             items.append({
                 "title": entry.title,
                 "url": entry.link,
@@ -77,8 +78,8 @@ def fetch_live_news():
         live_data[cat] = items
     return live_data
 
-# Carga noticias frescas
-news_data_live = fetch_live_news()
+# Carga noticias frescas en español
+news_data_live = fetch_live_news_es()
 
 # Navegación por pestañas principales
 tab_inicio, tab_bot, tab_mercado = st.tabs([
@@ -88,200 +89,205 @@ tab_inicio, tab_bot, tab_mercado = st.tabs([
 ])
 
 # ---------------------------------------------------------
-# PESTAÑA INICIO: Cajón de Noticias con Scroll y Datos Reales
+# PESTAÑA INICIO: Distribución con Noticias Abajo a la Derecha
 # ---------------------------------------------------------
 with tab_inicio:
-    st.subheader("Bienvenido al Panel Principal")
-    st.write("Selecciona cualquiera de las pestañas superiores para ver el Estado del Bot o la Rotación de Mercado.")
+    col_izq, col_der = st.columns([1.3, 1])
 
-    news_data_json = json.dumps(news_data_live)
+    with col_izq:
+        st.subheader("Bienvenido al Panel Principal")
+        st.write("Selecciona cualquiera de las pestañas superiores para explorar el Estado del Bot o la Rotación de Mercado.")
+        st.info("📌 Las noticias de la derecha se actualizan en vivo desde fuentes financieras internacionales traducidas al español.")
 
-    news_ticker_html = f"""
-    <!DOCTYPE html>
-    <html>
-    <head>
-    <style>
-        body {{
-            margin: 0;
-            padding: 0;
-            background-color: transparent;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            overflow: hidden;
-        }}
-        .news-box {{
-            width: 100%;
-            max-width: 450px;
-            height: 380px;
-            background-color: #161b22;
-            border: 1px solid #30363d;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.6);
-            overflow: hidden;
-            padding: 12px;
-            box-sizing: border-box;
-        }}
-        .news-header {{
-            font-size: 13px;
-            font-weight: bold;
-            color: #00e676;
-            margin-bottom: 8px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }}
-        .category-bar {{
-            display: flex;
-            gap: 4px;
-            border-bottom: 1px solid #30363d;
-            padding-bottom: 6px;
-            margin-bottom: 8px;
-            overflow-x: auto;
-            white-space: nowrap;
-        }}
-        .category-bar::-webkit-scrollbar {{
-            height: 3px;
-        }}
-        .category-bar::-webkit-scrollbar-thumb {{
-            background: #30363d;
-            border-radius: 3px;
-        }}
-        .cat-btn {{
-            background: #21262d;
-            color: #8b949e;
-            border: 1px solid #30363d;
-            border-radius: 4px;
-            padding: 4px 8px;
-            font-size: 11px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }}
-        .cat-btn:hover {{
-            color: #e6edf3;
-            border-color: #8b949e;
-        }}
-        .cat-btn.active {{
-            background: #00e676;
-            color: #0b0e14;
-            border-color: #00e676;
-        }}
-        .scroll-container {{
-            height: 285px;
-            overflow-y: hidden;
-            position: relative;
-        }}
-        .scroll-container:hover {{
-            overflow-y: auto;
-        }}
-        .scroll-container::-webkit-scrollbar {{
-            width: 5px;
-        }}
-        .scroll-container::-webkit-scrollbar-track {{
-            background: #161b22;
-        }}
-        .scroll-container::-webkit-scrollbar-thumb {{
-            background: #30363d;
-            border-radius: 4px;
-        }}
-        .scroll-container::-webkit-scrollbar-thumb:hover {{
-            background: #00e676;
-        }}
-        .scroll-content {{
-            position: absolute;
-            width: 95%;
-            animation: scrollUp 45s linear infinite;
-        }}
-        .scroll-container:hover .scroll-content {{
-            animation-play-state: paused;
-            position: relative;
-        }}
-        @keyframes scrollUp {{
-            0% {{ top: 100%; }}
-            100% {{ top: -250%; }}
-        }}
-        .news-item {{
-            padding: 10px 0;
-            border-bottom: 1px dashed #21262d;
-            font-size: 12px;
-            line-height: 1.4;
-        }}
-        .news-link {{
-            color: #e6edf3;
-            text-decoration: none;
-            display: block;
-            transition: color 0.2s;
-        }}
-        .news-link:hover {{
-            color: #00e676;
-            text-decoration: underline;
-        }}
-        .news-time {{
-            font-size: 10px;
-            color: #8b949e;
-            margin-top: 4px;
-        }}
-    </style>
-    </head>
-    <body>
+    with col_der:
+        news_data_json = json.dumps(news_data_live)
 
-    <div class="news-box">
-        <div class="news-header">
-            <span>📰 TITULARES EN VIVO</span>
-            <span style="font-size: 9px; color: #8b949e; background: #21262d; padding: 2px 6px; border-radius: 4px;">EN VIVO RSS</span>
+        news_ticker_html = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+        <style>
+            body {{
+                margin: 0;
+                padding: 0;
+                background-color: transparent;
+                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+                overflow: hidden;
+            }}
+            .news-box {{
+                width: 100%;
+                max-width: 450px;
+                height: 380px;
+                background-color: #161b22;
+                border: 1px solid #30363d;
+                border-radius: 12px;
+                box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+                overflow: hidden;
+                padding: 12px;
+                box-sizing: border-box;
+            }}
+            .news-header {{
+                font-size: 13px;
+                font-weight: bold;
+                color: #00e676;
+                margin-bottom: 8px;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }}
+            .category-bar {{
+                display: flex;
+                gap: 4px;
+                border-bottom: 1px solid #30363d;
+                padding-bottom: 6px;
+                margin-bottom: 8px;
+                overflow-x: auto;
+                white-space: nowrap;
+            }}
+            .category-bar::-webkit-scrollbar {{
+                height: 3px;
+            }}
+            .category-bar::-webkit-scrollbar-thumb {{
+                background: #30363d;
+                border-radius: 3px;
+            }}
+            .cat-btn {{
+                background: #21262d;
+                color: #8b949e;
+                border: 1px solid #30363d;
+                border-radius: 4px;
+                padding: 4px 8px;
+                font-size: 11px;
+                font-weight: 600;
+                cursor: pointer;
+                transition: all 0.2s ease;
+            }}
+            .cat-btn:hover {{
+                color: #e6edf3;
+                border-color: #8b949e;
+            }}
+            .cat-btn.active {{
+                background: #00e676;
+                color: #0b0e14;
+                border-color: #00e676;
+            }}
+            .scroll-container {{
+                height: 285px;
+                overflow-y: hidden;
+                position: relative;
+            }}
+            .scroll-container:hover {{
+                overflow-y: auto;
+            }}
+            .scroll-container::-webkit-scrollbar {{
+                width: 5px;
+            }}
+            .scroll-container::-webkit-scrollbar-track {{
+                background: #161b22;
+            }}
+            .scroll-container::-webkit-scrollbar-thumb {{
+                background: #30363d;
+                border-radius: 4px;
+            }}
+            .scroll-container::-webkit-scrollbar-thumb:hover {{
+                background: #00e676;
+            }}
+            .scroll-content {{
+                position: absolute;
+                width: 95%;
+                animation: scrollUp 45s linear infinite;
+            }}
+            .scroll-container:hover .scroll-content {{
+                animation-play-state: paused;
+                position: relative;
+            }}
+            @keyframes scrollUp {{
+                0% {{ top: 100%; }}
+                100% {{ top: -250%; }}
+            }}
+            .news-item {{
+                padding: 10px 0;
+                border-bottom: 1px dashed #21262d;
+                font-size: 12px;
+                line-height: 1.4;
+            }}
+            .news-link {{
+                color: #e6edf3;
+                text-decoration: none;
+                display: block;
+                transition: color 0.2s;
+            }}
+            .news-link:hover {{
+                color: #00e676;
+                text-decoration: underline;
+            }}
+            .news-time {{
+                font-size: 10px;
+                color: #8b949e;
+                margin-top: 4px;
+            }}
+        </style>
+        </head>
+        <body>
+
+        <div class="news-box">
+            <div class="news-header">
+                <span>📰 TITULARES EN VIVO</span>
+                <span style="font-size: 9px; color: #8b949e; background: #21262d; padding: 2px 6px; border-radius: 4px;">EN ESPAÑOL</span>
+            </div>
+
+            <div class="category-bar">
+                <button class="cat-btn active" onclick="changeCategory('macro', this)">🌐 Macro</button>
+                <button class="cat-btn" onclick="changeCategory('petroleo', this)">🛢️ Petróleo</button>
+                <button class="cat-btn" onclick="changeCategory('semiconductores', this)">💻 Semis</button>
+                <button class="cat-btn" onclick="changeCategory('software', this)">⚙️ Software</button>
+                <button class="cat-btn" onclick="changeCategory('bonos', this)">📜 Bonos</button>
+            </div>
+
+            <div class="scroll-container">
+                <div class="scroll-content" id="newsContent"></div>
+            </div>
         </div>
 
-        <div class="category-bar">
-            <button class="cat-btn active" onclick="changeCategory('macro', this)">🌐 Macro</button>
-            <button class="cat-btn" onclick="changeCategory('petroleo', this)">🛢️ Petróleo</button>
-            <button class="cat-btn" onclick="changeCategory('semiconductores', this)">💻 Semis</button>
-            <button class="cat-btn" onclick="changeCategory('software', this)">⚙️ Software</button>
-            <button class="cat-btn" onclick="changeCategory('bonos', this)">📜 Bonos</button>
-        </div>
+        <script>
+            const newsData = {news_data_json};
 
-        <div class="scroll-container">
-            <div class="scroll-content" id="newsContent"></div>
-        </div>
-    </div>
+            function changeCategory(catKey, btnElement) {{
+                const buttons = document.querySelectorAll('.cat-btn');
+                buttons.forEach(btn => btn.classList.remove('active'));
+                if(btnElement) btnElement.classList.add('active');
 
-    <script>
-        const newsData = {news_data_json};
+                const contentDiv = document.getElementById('newsContent');
+                const items = newsData[catKey] || [];
+                
+                let html = '';
+                items.forEach((item, idx) => {{
+                    html += `
+                        <div class="news-item">
+                            <a href="${{item.url}}" target="_blank" class="news-link">
+                                ${{idx + 1}}. ${{item.title}}
+                            </a>
+                            <div class="news-time">🕒 ${{item.time}}</div>
+                        </div>
+                    `;
+                }});
 
-        function changeCategory(catKey, btnElement) {{
-            const buttons = document.querySelectorAll('.cat-btn');
-            buttons.forEach(btn => btn.classList.remove('active'));
-            if(btnElement) btnElement.classList.add('active');
+                contentDiv.style.animation = 'none';
+                contentDiv.offsetHeight;
+                contentDiv.innerHTML = html;
+                contentDiv.style.animation = 'scrollUp 45s linear infinite';
+            }}
 
-            const contentDiv = document.getElementById('newsContent');
-            const items = newsData[catKey] || [];
-            
-            let html = '';
-            items.forEach((item, idx) => {{
-                html += `
-                    <div class="news-item">
-                        <a href="${{item.url}}" target="_blank" class="news-link">
-                            ${{idx + 1}}. ${{item.title}}
-                        </a>
-                        <div class="news-time">🕒 ${{item.time}}</div>
-                    </div>
-                `;
+            document.addEventListener('DOMContentLoaded', () => {{
+                const firstBtn = document.querySelector('.cat-btn');
+                changeCategory('macro', firstBtn);
             }});
+        </script>
 
-            contentDiv.style.animation = 'none';
-            contentDiv.offsetHeight;
-            contentDiv.innerHTML = html;
-            contentDiv.style.animation = 'scrollUp 45s linear infinite';
-        }}
-
-        document.addEventListener('DOMContentLoaded', () => {{
-            const firstBtn = document.querySelector('.cat-btn');
-            changeCategory('macro', firstBtn);
-        }});
-    </script>
-
-    </body>
-    </html>
-    """
-    components.html(news_ticker_html, height=400)
+        </body>
+        </html>
+        """
+        components.html(news_ticker_html, height=400)
 
 # ---------------------------------------------------------
 # PESTAÑA 1: Estado del Bot
@@ -294,8 +300,6 @@ with tab_bot:
     c3.metric("GANANCIA TOTAL", "$ 278.940,00", "+ 55,78%")
     c4.metric("OPERACIONES HOY", "7", "5 ganadas / 2 perdidas")
     c5.metric("% ACIERTO (WINRATE)", "71.43%", "Alto rendimiento")
-    
-    st.info("💡 La conexión con la base de datos `trading.db` leerá automáticamente estos valores cuando tu bot ejecute operaciones.")
 
 # ---------------------------------------------------------
 # PESTAÑA 2: Rotación de Mercado + TradingView Heatmap + Matriz
