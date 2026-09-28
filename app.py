@@ -49,7 +49,110 @@ st.markdown("""
 
 st.title("🤖 BOT OPCIONES - DASHBOARD")
 
-tab_bot, tab_mercado = st.tabs(["📊 ESTADO DEL BOT", "🌍 ROTACIÓN DE MERCADO"])
+# Navegación por pestañas principales
+tab_inicio, tab_bot, tab_mercado = st.tabs([
+    "🏠 INICIO", 
+    "📊 ESTADO DEL BOT", 
+    "🌍 ROTACIÓN DE MERCADO"
+])
+
+# ---------------------------------------------------------
+# PESTAÑA INICIO: Solo Titulares animado en 10x10cm (inferior derecha)
+# ---------------------------------------------------------
+with tab_inicio:
+    st.subheader("Bienvenido al Panel Principal")
+    st.write("Selecciona cualquiera de las pestañas superiores para ver el Estado del Bot o la Rotación de Mercado.")
+
+    # Widget desplegado en la esquina inferior derecha de 380x380 px (~10x10 cm)
+    news_ticker_html = """
+    <style>
+        .news-box {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 380px;
+            height: 380px;
+            background-color: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+            overflow: hidden;
+            z-index: 99999;
+            padding: 12px;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+        .news-header {
+            font-size: 14px;
+            font-weight: bold;
+            color: #00e676;
+            border-bottom: 1px solid #30363d;
+            padding-bottom: 8px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .scroll-container {
+            height: 320px;
+            overflow: hidden;
+            position: relative;
+        }
+        .scroll-content {
+            position: absolute;
+            width: 100%;
+            animation: scrollUp 40s linear infinite;
+        }
+        .scroll-content:hover {
+            animation-play-state: paused;
+        }
+        @keyframes scrollUp {
+            0% { top: 100%; }
+            100% { top: -180%; }
+        }
+        .news-item {
+            padding: 8px 0;
+            border-bottom: 1px dashed #21262d;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+        .news-item a {
+            color: #e6edf3;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+        .news-item a:hover {
+            color: #00e676;
+        }
+    </style>
+
+    <div class="news-box">
+        <div class="news-header">
+            <span>📰 ÚLTIMOS TITULARES</span>
+            <span style="font-size: 10px; color: #8b949e;">EN VIVO</span>
+        </div>
+        <div class="scroll-container">
+            <div class="scroll-content">
+                <div class="news-item"><a href="https://www.tradingview.com/news/" target="_blank">1. La Reserva Federal mantiene tasas mientras evalúa inflación.</a></div>
+                <div class="news-item"><a href="https://www.tradingview.com/news/" target="_blank">2. Nvidia registra un incremento en ingresos por IA.</a></div>
+                <div class="news-item"><a href="https://www.tradingview.com/news/" target="_blank">3. El S&P 500 alcanza nuevos máximos tras resultados tecnológicos.</a></div>
+                <div class="news-item"><a href="https://www.tradingview.com/news/" target="_blank">4. Petróleo WTI retrocede ante aumento de reservas comerciales.</a></div>
+                <div class="news-item"><a href="https://www.tradingview.com/news/" target="_blank">5. Acciones de Apple muestran fortaleza tras demanda de nuevos dispositivos.</a></div>
+                <div class="news-item"><a href="https://www.tradingview.com/news/" target="_blank">6. Rendimiento del Bono a 10 años cae ligeramente.</a></div>
+                <div class="news-item"><a href="https://www.tradingview.com/news/" target="_blank">7. Amazon anuncia nuevas inversiones en centros de datos.</a></div>
+                <div class="news-item"><a href="https://www.tradingview.com/news/" target="_blank">8. Sector financiero sube tras balances bancarios trimestrales.</a></div>
+                <div class="news-item"><a href="https://www.tradingview.com/news/" target="_blank">9. Bitcoin se consolida en rangos clave de resistencia.</a></div>
+                <div class="news-item"><a href="https://www.tradingview.com/news/" target="_blank">10. El mercado de opciones registra alta actividad en contratos CALL.</a></div>
+                <div class="news-item"><a href="https://www.tradingview.com/news/" target="_blank">11. Meta Platforms acelera inversión en modelos abiertos de inteligencia artificial.</a></div>
+                <div class="news-item"><a href="https://www.tradingview.com/news/" target="_blank">12. Dólar se estabiliza frente a principales divisas internacionales.</a></div>
+                <div class="news-item"><a href="https://www.tradingview.com/news/" target="_blank">13. Empresas de Semiconductores muestran rebote técnico significativo.</a></div>
+                <div class="news-item"><a href="https://www.tradingview.com/news/" target="_blank">14. Ventas minoristas en EE.UU. superan expectativas en el último trimestre.</a></div>
+                <div class="news-item"><a href="https://www.tradingview.com/news/" target="_blank">15. Sector energía reacciona a decisiones operativas de la OPEP+.</a></div>
+            </div>
+        </div>
+    </div>
+    """
+    components.html(news_ticker_html, height=420)
 
 # ---------------------------------------------------------
 # PESTAÑA 1: Estado del Bot
@@ -73,7 +176,6 @@ with tab_mercado:
     # --- SECCIÓN 1: TRADINGVIEW MAPA DE CALOR S&P 500 ---
     st.markdown("### 🗺️ Mapa de Calor del Mercado EE.UU. (S&P 500)")
     
-    # Ancho 100% (cubre toda la pantalla wide) x Alto 500px (~13 cm)
     tradingview_html = """
     <div style="width: 100%;">
         <div class="tradingview-widget-container" style="height: 500px; width: 100%;">
