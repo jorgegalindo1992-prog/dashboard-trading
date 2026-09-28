@@ -54,11 +54,10 @@ st.markdown("""
 st.title("🤖 BOT OPCIONES - DASHBOARD")
 
 # ---------------------------------------------------------
-# EXTRACCIÓN DE NOTICIAS RECIENTES (MÁX. 10 DÍAS / 15 POR CATEGORÍA)
+# EXTRACCIÓN Y ORDENAMIENTO CRONOLÓGICO DE NOTICIAS (MÁX. 10 DÍAS / 15 POR CATEGORÍA)
 # ---------------------------------------------------------
-@st.cache_data(ttl=300) # Se actualiza automáticamente cada 5 minutos
+@st.cache_data(ttl=300) # Se actualiza automáticamente cada 5 minutos (300 segundos)
 def fetch_live_news_es():
-    # Parámetro when:10d limita la búsqueda en Google News a los últimos 10 días
     rss_urls = {
         "macro": "https://news.google.com/rss/search?q=economia+EEUU+inflacion+Reserva+Federal+when:10d&hl=es-419&gl=US&ceid=US:es-419",
         "petroleo": "https://news.google.com/rss/search?q=precio+petroleo+crudo+OPEP+when:10d&hl=es-419&gl=US&ceid=US:es-419",
@@ -72,27 +71,33 @@ def fetch_live_news_es():
 
     for cat, url in rss_urls.items():
         feed = feedparser.parse(url)
-        items = []
+        temp_items = []
         
         for entry in feed.entries:
-            if len(items) >= 15: # Máximo 15 noticias por segmento
-                break
-                
             published_dt = None
-            if hasattr(entry, 'published_parsed') and entry.published_parsed:
-                published_dt = datetime.fromtimestamp(time.mktime(entry.published_parsed), tz=timezone.utc)
+            timestamp_sort = 0
             
-            # Filtro adicional de seguridad para garantizar que no supere los 10 días
+            if hasattr(entry, 'published_parsed') and entry.published_parsed:
+                timestamp_sort = time.mktime(entry.published_parsed)
+                published_dt = datetime.fromtimestamp(timestamp_sort, tz=timezone.utc)
+            
+            # Filtro adicional de seguridad para no superar los 10 días
             if published_dt and published_dt < limite_fecha:
                 continue
                 
-            items.append({
+            temp_items.append({
                 "title": entry.title,
                 "url": entry.link,
-                "time": entry.published if hasattr(entry, 'published') else "Reciente"
+                "time": entry.published if hasattr(entry, 'published') else "Reciente",
+                "timestamp": timestamp_sort
             })
             
-        live_data[cat] = items
+        # Ordenar de más reciente (timestamp mayor) a más antigua (timestamp menor)
+        temp_items.sort(key=lambda x: x["timestamp"], reverse=True)
+        
+        # Seleccionar las 15 noticias más recientes
+        live_data[cat] = temp_items[:15]
+        
     return live_data
 
 # Carga noticias frescas en español
@@ -114,10 +119,10 @@ with tab_inicio:
     with col_izq:
         st.subheader("Bienvenido al Panel Principal")
         st.write("Selecciona cualquiera de las pestañas superiores para explorar el Estado del Bot o la Rotación de Mercado.")
-        st.info("📌 Las noticias se actualizan automáticamente en tiempo real (máximo 10 días de antigüedad, 15 por categoría).")
+        st.info("📌 Las noticias se actualizan automáticamente en vivo (ordenadas de la más reciente a la más antigua, máx. 10 días).")
 
     with col_der:
-        # Espaciador vertical para empujar el cajón hacia la esquina inferior derecha
+        # Espaciador vertical para ubicar el cajón abajo a la derecha
         st.markdown("<div style='height: 100px;'></div>", unsafe_allow_html=True)
         
         news_data_json = json.dumps(news_data_live)
@@ -145,7 +150,7 @@ with tab_inicio:
                 overflow: hidden;
                 padding: 12px;
                 box-sizing: border-box;
-                margin-left: auto; /* Alineación hacia la derecha extrema */
+                margin-left: auto;
             }}
             .news-header {{
                 font-size: 13px;
@@ -254,7 +259,7 @@ with tab_inicio:
         <div class="news-box">
             <div class="news-header">
                 <span>📰 TITULARES EN VIVO</span>
-                <span style="font-size: 9px; color: #8b949e; background: #21262d; padding: 2px 6px; border-radius: 4px;">MÁX 10 DÍAS</span>
+                <span style="font-size: 9px; color: #8b949e; background: #21262d; padding: 2px 6px; border-radius: 4px;">RECIENTES PRIMERO</span>
             </div>
 
             <div class="category-bar">
