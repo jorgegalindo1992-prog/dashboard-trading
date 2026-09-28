@@ -13,7 +13,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# Estilos CSS personalizados
+# Estilos CSS
 st.markdown("""
     <style>
     .stApp {
@@ -57,32 +57,225 @@ tab_inicio, tab_bot, tab_mercado = st.tabs([
 ])
 
 # ---------------------------------------------------------
-# PESTAÑA INICIO: Titulares y Noticias Financieras en Vivo
+# PESTAÑA INICIO: Cajón de Noticias con Scroll y Filtros
 # ---------------------------------------------------------
 with tab_inicio:
-    st.subheader("📰 Titulares y Eventos del Mercado en Tiempo Real")
-    st.write("Noticias globales y macroeconómicas impulsadas por fuentes financieras oficiales.")
+    st.subheader("Bienvenido al Panel Principal")
+    st.write("Selecciona cualquiera de las pestañas superiores para ver el Estado del Bot o la Rotación de Mercado.")
 
-    # Widget Oficial de Noticias en Tiempo Real (TradingView Timeline)
-    news_tradingview_html = """
-    <div style="width: 100%;">
-        <div class="tradingview-widget-container" style="height: 500px; width: 100%;">
-          <div class="tradingview-widget-container__widget" style="height: 500px; width: 100%;"></div>
-          <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-timeline.js" async>
-          {
-          "feedMode": "all_symbols",
-          "colorTheme": "dark",
-          "isTransparent": false,
-          "displayMode": "regular",
-          "width": "100%",
-          "height": "500",
-          "locale": "es"
+    news_ticker_html = """
+    <!DOCTYPE html>
+    <html>
+    <head>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: transparent;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            overflow: hidden;
         }
-          </script>
+        .news-box {
+            width: 100%;
+            max-width: 420px;
+            height: 380px;
+            background-color: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+            overflow: hidden;
+            padding: 12px;
+            box-sizing: border-box;
+        }
+        .news-header {
+            font-size: 13px;
+            font-weight: bold;
+            color: #00e676;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .category-bar {
+            display: flex;
+            gap: 4px;
+            border-bottom: 1px solid #30363d;
+            padding-bottom: 6px;
+            margin-bottom: 8px;
+            overflow-x: auto;
+            white-space: nowrap;
+        }
+        .category-bar::-webkit-scrollbar {
+            height: 3px;
+        }
+        .category-bar::-webkit-scrollbar-thumb {
+            background: #30363d;
+            border-radius: 3px;
+        }
+        .cat-btn {
+            background: #21262d;
+            color: #8b949e;
+            border: 1px solid #30363d;
+            border-radius: 4px;
+            padding: 4px 8px;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .cat-btn:hover {
+            color: #e6edf3;
+            border-color: #8b949e;
+        }
+        .cat-btn.active {
+            background: #00e676;
+            color: #0b0e14;
+            border-color: #00e676;
+        }
+        .scroll-container {
+            height: 285px;
+            overflow-y: hidden;
+            position: relative;
+        }
+        .scroll-container:hover {
+            overflow-y: auto;
+        }
+        .scroll-container::-webkit-scrollbar {
+            width: 5px;
+        }
+        .scroll-container::-webkit-scrollbar-track {
+            background: #161b22;
+        }
+        .scroll-container::-webkit-scrollbar-thumb {
+            background: #30363d;
+            border-radius: 4px;
+        }
+        .scroll-container::-webkit-scrollbar-thumb:hover {
+            background: #00e676;
+        }
+        .scroll-content {
+            position: absolute;
+            width: 95%;
+            animation: scrollUp 40s linear infinite;
+        }
+        .scroll-container:hover .scroll-content {
+            animation-play-state: paused;
+            position: relative;
+        }
+        @keyframes scrollUp {
+            0% { top: 100%; }
+            100% { top: -250%; }
+        }
+        .news-item {
+            padding: 10px 0;
+            border-bottom: 1px dashed #21262d;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+        .news-link {
+            color: #e6edf3;
+            text-decoration: none;
+            display: block;
+            transition: color 0.2s;
+        }
+        .news-link:hover {
+            color: #00e676;
+            text-decoration: underline;
+        }
+        .news-time {
+            font-size: 10px;
+            color: #8b949e;
+            margin-top: 4px;
+        }
+    </style>
+    </head>
+    <body>
+
+    <div class="news-box">
+        <div class="news-header">
+            <span>📰 TITULARES EN VIVO</span>
+            <span style="font-size: 9px; color: #8b949e; background: #21262d; padding: 2px 6px; border-radius: 4px;">ÚLTIMA HORA</span>
+        </div>
+
+        <div class="category-bar">
+            <button class="cat-btn active" onclick="changeCategory('macro', this)">🌐 Macro</button>
+            <button class="cat-btn" onclick="changeCategory('petroleo', this)">🛢️ Petróleo</button>
+            <button class="cat-btn" onclick="changeCategory('semiconductores', this)">💻 Semis</button>
+            <button class="cat-btn" onclick="changeCategory('software', this)">⚙️ Software</button>
+            <button class="cat-btn" onclick="changeCategory('bonos', this)">📜 Bonos</button>
+        </div>
+
+        <div class="scroll-container">
+            <div class="scroll-content" id="newsContent"></div>
         </div>
     </div>
+
+    <script>
+        const newsData = {
+            macro: [
+                { title: "1. Datos del IPC y PCE en EE.UU.: Expectativas de tasas de interés de la Reserva Federal.", time: "Hace 10 min", url: "https://www.cnbc.com/us-economy/" },
+                { title: "2. Nóminas No Agrícolas (NFP) y datos de empleo en EE.UU.", time: "Hace 25 min", url: "https://www.reuters.com/business/us/" },
+                { title: "3. Decisiones de política monetaria y discursos de Jerome Powell.", time: "Hace 40 min", url: "https://www.bloomberg.com/economics" },
+                { title: "4. Indice de Confianza del Consumidor e indicadores manufactureros ISM.", time: "Hace 1 hora", url: "https://www.marketwatch.com/economy" }
+            ],
+            petroleo: [
+                { title: "1. Precios del Petróleo WTI y Brent reaccionan a recortes de producción de la OPEP+.", time: "Hace 15 min", url: "https://www.reuters.com/business/energy/" },
+                { title: "2. Informe semanal de inventarios de crudo de la EIA en Estados Unidos.", time: "Hace 35 min", url: "https://www.bloomberg.com/energy" },
+                { title: "3. Tensiones geopolíticas en Medio Oriente y su impacto en la oferta energética.", time: "Hace 1 hora", url: "https://www.cnbc.com/oil/" }
+            ],
+            semiconductores: [
+                { title: "1. Nvidia y el avance de chips para inteligencia artificial de nueva generación.", time: "Hace 12 min", url: "https://www.cnbc.com/technology/" },
+                { title: "2. TSMC reporta ingresos y demanda en nodos de aceleradores de IA.", time: "Hace 30 min", url: "https://www.reuters.com/technology/" },
+                { title: "3. AMD e Intel compiten por cuota de mercado en procesadores de centros de datos.", time: "Hace 50 min", url: "https://www.marketwatch.com/investing/stock/nvda" }
+            ],
+            software: [
+                { title: "1. Microsoft integra nuevas funciones de IA Copilot en suites corporativas.", time: "Hace 20 min", url: "https://www.cnbc.com/software/" },
+                { title: "2. Salesforce y Oracle muestran sólido crecimiento en ingresos por suscripción en la nube.", time: "Hace 45 min", url: "https://www.reuters.com/technology/" },
+                { title: "3. Ciberseguridad: Palo Alto Networks y CrowdStrike registran alta demanda empresarial.", time: "Hace 1 hora", url: "https://www.bloomberg.com/technology" }
+            ],
+            bonos: [
+                { title: "1. Rendimiento del Bono del Tesoro a 10 años (US10Y) ajusta posiciones.", time: "Hace 8 min", url: "https://www.cnbc.com/bonds/" },
+                { title: "2. Curva de tipos entre bonos a 2 y 10 años muestra variaciones de diferencial.", time: "Hace 28 min", url: "https://www.bloomberg.com/markets/rates-bonds" },
+                { title: "3. Subastas del Tesoro de EE.UU. registran demanda de inversores institucionales.", time: "Hace 55 min", url: "https://www.marketwatch.com/investing/bond/tmubmusd10y" }
+            ]
+        };
+
+        function changeCategory(catKey, btnElement) {
+            const buttons = document.querySelectorAll('.cat-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            btnElement.classList.add('active');
+
+            const contentDiv = document.getElementById('newsContent');
+            const items = newsData[catKey] || [];
+            
+            let html = '';
+            items.forEach(item => {
+                html += `
+                    <div class="news-item">
+                        <a href="${item.url}" target="_blank" class="news-link">
+                            ${item.title}
+                        </a>
+                        <div class="news-time">🕒 ${item.time}</div>
+                    </div>
+                `;
+            });
+
+            contentDiv.style.animation = 'none';
+            contentDiv.offsetHeight;
+            contentDiv.innerHTML = html;
+            contentDiv.style.animation = 'scrollUp 40s linear infinite';
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const firstBtn = document.querySelector('.cat-btn');
+            changeCategory('macro', firstBtn);
+        });
+    </script>
+
+    </body>
+    </html>
     """
-    components.html(news_tradingview_html, height=520)
+    components.html(news_ticker_html, height=400)
 
 # ---------------------------------------------------------
 # PESTAÑA 1: Estado del Bot
@@ -147,11 +340,9 @@ with tab_mercado:
     tickers_list = [etfs_matriz[r][c] for r in etfs_matriz for c in etfs_matriz[r]]
     
     try:
-        # Descarga con soporte robusto de columnas en yfinance
         df_download = yf.download(tickers_list, period='5d')['Close']
         df_download = df_download.dropna()
         
-        # Extraer los dos últimos días de cotización
         last_two = df_download.tail(2)
         cambio_pct = ((last_two.iloc[-1] - last_two.iloc[-2]) / last_two.iloc[-2]) * 100
         
@@ -180,9 +371,9 @@ with tab_mercado:
             texttemplate="%{text}",
             textfont={"size": 16, "color": "white", "family": "Arial Black"},
             colorscale=[
-                [0.0, "#b71c1c"],   # Rojo
-                [0.5, "#212121"],   # Neutro
-                [1.0, "#1b5e20"]    # Verde
+                [0.0, "#b71c1c"],
+                [0.5, "#212121"],
+                [1.0, "#1b5e20"]
             ],
             showscale=False
         ))
