@@ -5,6 +5,8 @@ import plotly.graph_objects as go
 import pandas as pd
 import feedparser
 import json
+from datetime import datetime, timedelta, timezone
+import time
 
 # ---------------------------------------------------------
 # CONFIGURACIÓN DE PÁGINA Y ESTILO NEÓN
@@ -52,29 +54,44 @@ st.markdown("""
 st.title("🤖 BOT OPCIONES - DASHBOARD")
 
 # ---------------------------------------------------------
-# EXTRACCIÓN DE NOTICIAS EN TIEMPO REAL EN ESPAÑOL (RSS)
+# EXTRACCIÓN DE NOTICIAS RECIENTES (MÁX. 10 DÍAS / 15 POR CATEGORÍA)
 # ---------------------------------------------------------
 @st.cache_data(ttl=300) # Se actualiza automáticamente cada 5 minutos
 def fetch_live_news_es():
-    # Feeds parametrizados para obtener los titulares traducidos/redactados en español
+    # Parámetro when:10d limita la búsqueda en Google News a los últimos 10 días
     rss_urls = {
-        "macro": "https://news.google.com/rss/search?q=economia+EEUU+inflacion+Reserva+Federal&hl=es-419&gl=US&ceid=US:es-419",
-        "petroleo": "https://news.google.com/rss/search?q=precio+petroleo+crudo+OPEP&hl=es-419&gl=US&ceid=US:es-419",
-        "semiconductores": "https://news.google.com/rss/search?q=semiconductores+Nvidia+TSMC+chips&hl=es-419&gl=US&ceid=US:es-419",
-        "software": "https://news.google.com/rss/search?q=acciones+software+inteligencia+artificial+nube&hl=es-419&gl=US&ceid=US:es-419",
-        "bonos": "https://news.google.com/rss/search?q=bonos+del+tesoro+EEUU+rendimiento&hl=es-419&gl=US&ceid=US:es-419"
+        "macro": "https://news.google.com/rss/search?q=economia+EEUU+inflacion+Reserva+Federal+when:10d&hl=es-419&gl=US&ceid=US:es-419",
+        "petroleo": "https://news.google.com/rss/search?q=precio+petroleo+crudo+OPEP+when:10d&hl=es-419&gl=US&ceid=US:es-419",
+        "semiconductores": "https://news.google.com/rss/search?q=semiconductores+Nvidia+TSMC+chips+when:10d&hl=es-419&gl=US&ceid=US:es-419",
+        "software": "https://news.google.com/rss/search?q=acciones+software+inteligencia+artificial+nube+when:10d&hl=es-419&gl=US&ceid=US:es-419",
+        "bonos": "https://news.google.com/rss/search?q=bonos+del+tesoro+EEUU+rendimiento+when:10d&hl=es-419&gl=US&ceid=US:es-419"
     }
     
+    limite_fecha = datetime.now(timezone.utc) - timedelta(days=10)
     live_data = {}
+
     for cat, url in rss_urls.items():
         feed = feedparser.parse(url)
         items = []
-        for entry in feed.entries[:8]: # 8 noticias más recientes por categoría
+        
+        for entry in feed.entries:
+            if len(items) >= 15: # Máximo 15 noticias por segmento
+                break
+                
+            published_dt = None
+            if hasattr(entry, 'published_parsed') and entry.published_parsed:
+                published_dt = datetime.fromtimestamp(time.mktime(entry.published_parsed), tz=timezone.utc)
+            
+            # Filtro adicional de seguridad para garantizar que no supere los 10 días
+            if published_dt and published_dt < limite_fecha:
+                continue
+                
             items.append({
                 "title": entry.title,
                 "url": entry.link,
                 "time": entry.published if hasattr(entry, 'published') else "Reciente"
             })
+            
         live_data[cat] = items
     return live_data
 
@@ -89,17 +106,20 @@ tab_inicio, tab_bot, tab_mercado = st.tabs([
 ])
 
 # ---------------------------------------------------------
-# PESTAÑA INICIO: Distribución con Noticias Abajo a la Derecha
+# PESTAÑA INICIO: Distribución con Cajón Abajo a la Derecha
 # ---------------------------------------------------------
 with tab_inicio:
-    col_izq, col_der = st.columns([1.3, 1])
+    col_izq, col_der = st.columns([1.2, 1])
 
     with col_izq:
         st.subheader("Bienvenido al Panel Principal")
         st.write("Selecciona cualquiera de las pestañas superiores para explorar el Estado del Bot o la Rotación de Mercado.")
-        st.info("📌 Las noticias de la derecha se actualizan en vivo desde fuentes financieras internacionales traducidas al español.")
+        st.info("📌 Las noticias se actualizan automáticamente en tiempo real (máximo 10 días de antigüedad, 15 por categoría).")
 
     with col_der:
+        # Espaciador vertical para empujar el cajón hacia la esquina inferior derecha
+        st.markdown("<div style='height: 100px;'></div>", unsafe_allow_html=True)
+        
         news_data_json = json.dumps(news_data_live)
 
         news_ticker_html = f"""
@@ -117,7 +137,7 @@ with tab_inicio:
             .news-box {{
                 width: 100%;
                 max-width: 450px;
-                height: 380px;
+                height: 400px;
                 background-color: #161b22;
                 border: 1px solid #30363d;
                 border-radius: 12px;
@@ -125,6 +145,7 @@ with tab_inicio:
                 overflow: hidden;
                 padding: 12px;
                 box-sizing: border-box;
+                margin-left: auto; /* Alineación hacia la derecha extrema */
             }}
             .news-header {{
                 font-size: 13px;
@@ -172,7 +193,7 @@ with tab_inicio:
                 border-color: #00e676;
             }}
             .scroll-container {{
-                height: 285px;
+                height: 305px;
                 overflow-y: hidden;
                 position: relative;
             }}
@@ -195,7 +216,7 @@ with tab_inicio:
             .scroll-content {{
                 position: absolute;
                 width: 95%;
-                animation: scrollUp 45s linear infinite;
+                animation: scrollUp 65s linear infinite;
             }}
             .scroll-container:hover .scroll-content {{
                 animation-play-state: paused;
@@ -203,7 +224,7 @@ with tab_inicio:
             }}
             @keyframes scrollUp {{
                 0% {{ top: 100%; }}
-                100% {{ top: -250%; }}
+                100% {{ top: -350%; }}
             }}
             .news-item {{
                 padding: 10px 0;
@@ -233,7 +254,7 @@ with tab_inicio:
         <div class="news-box">
             <div class="news-header">
                 <span>📰 TITULARES EN VIVO</span>
-                <span style="font-size: 9px; color: #8b949e; background: #21262d; padding: 2px 6px; border-radius: 4px;">EN ESPAÑOL</span>
+                <span style="font-size: 9px; color: #8b949e; background: #21262d; padding: 2px 6px; border-radius: 4px;">MÁX 10 DÍAS</span>
             </div>
 
             <div class="category-bar">
@@ -275,7 +296,7 @@ with tab_inicio:
                 contentDiv.style.animation = 'none';
                 contentDiv.offsetHeight;
                 contentDiv.innerHTML = html;
-                contentDiv.style.animation = 'scrollUp 45s linear infinite';
+                contentDiv.style.animation = 'scrollUp 65s linear infinite';
             }}
 
             document.addEventListener('DOMContentLoaded', () => {{
@@ -287,7 +308,7 @@ with tab_inicio:
         </body>
         </html>
         """
-        components.html(news_ticker_html, height=400)
+        components.html(news_ticker_html, height=420)
 
 # ---------------------------------------------------------
 # PESTAÑA 1: Estado del Bot
