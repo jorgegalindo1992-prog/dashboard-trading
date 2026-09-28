@@ -57,21 +57,31 @@ tab_inicio, tab_bot, tab_mercado = st.tabs([
 ])
 
 # ---------------------------------------------------------
-# PESTAÑA INICIO: Solo Titulares animado en 10x10cm (inferior derecha)
+# PESTAÑA INICIO: Cajón de Noticias Interactivo con Sub-Categorías
 # ---------------------------------------------------------
 with tab_inicio:
     st.subheader("Bienvenido al Panel Principal")
     st.write("Selecciona cualquiera de las pestañas superiores para ver el Estado del Bot o la Rotación de Mercado.")
 
-    # Widget desplegado en la esquina inferior derecha de 380x380 px (~10x10 cm)
+    # Widget desplegado en la esquina inferior derecha (~10x10 cm -> 380x380 px)
     news_ticker_html = """
+    <!DOCTYPE html>
+    <html>
+    <head>
     <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: transparent;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            overflow: hidden;
+        }
         .news-box {
             position: fixed;
-            bottom: 20px;
-            right: 20px;
-            width: 380px;
-            height: 380px;
+            bottom: 10px;
+            right: 10px;
+            width: 360px;
+            height: 360px;
             background-color: #161b22;
             border: 1px solid #30363d;
             border-radius: 12px;
@@ -80,79 +90,205 @@ with tab_inicio:
             z-index: 99999;
             padding: 12px;
             box-sizing: border-box;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
         }
         .news-header {
-            font-size: 14px;
+            font-size: 13px;
             font-weight: bold;
             color: #00e676;
-            border-bottom: 1px solid #30363d;
-            padding-bottom: 8px;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
+        /* Barra de Pestañas / Secciones */
+        .category-bar {
+            display: flex;
+            gap: 4px;
+            border-bottom: 1px solid #30363d;
+            padding-bottom: 6px;
+            margin-bottom: 8px;
+            overflow-x: auto;
+            white-space: nowrap;
+        }
+        .category-bar::-webkit-scrollbar {
+            height: 3px;
+        }
+        .category-bar::-webkit-scrollbar-thumb {
+            background: #30363d;
+            border-radius: 3px;
+        }
+        .cat-btn {
+            background: #21262d;
+            color: #8b949e;
+            border: 1px solid #30363d;
+            border-radius: 4px;
+            padding: 3px 8px;
+            font-size: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .cat-btn:hover {
+            color: #e6edf3;
+            border-color: #8b949e;
+        }
+        .cat-btn.active {
+            background: #00e676;
+            color: #0b0e14;
+            border-color: #00e676;
+        }
         .scroll-container {
-            height: 320px;
+            height: 270px;
             overflow: hidden;
             position: relative;
         }
         .scroll-content {
             position: absolute;
             width: 100%;
-            animation: scrollUp 40s linear infinite;
+            animation: scrollUp 35s linear infinite;
         }
         .scroll-content:hover {
             animation-play-state: paused;
         }
         @keyframes scrollUp {
             0% { top: 100%; }
-            100% { top: -180%; }
+            100% { top: -220%; }
         }
         .news-item {
             padding: 8px 0;
             border-bottom: 1px dashed #21262d;
-            font-size: 12px;
+            font-size: 11px;
             line-height: 1.4;
-        }
-        .news-item a {
             color: #e6edf3;
-            text-decoration: none;
+            cursor: pointer;
             transition: color 0.2s;
         }
-        .news-item a:hover {
+        .news-item:hover {
             color: #00e676;
         }
+        .news-time {
+            font-size: 9px;
+            color: #8b949e;
+            margin-top: 2px;
+        }
     </style>
+    </head>
+    <body>
 
     <div class="news-box">
         <div class="news-header">
-            <span>📰 ÚLTIMOS TITULARES</span>
-            <span style="font-size: 10px; color: #8b949e;">EN VIVO</span>
+            <span>📰 TITULARES EN VIVO</span>
+            <span style="font-size: 9px; color: #8b949e; background: #21262d; padding: 2px 6px; border-radius: 4px;">ACTUALIZADO</span>
         </div>
+
+        <!-- Secciones / Categorías -->
+        <div class="category-bar">
+            <button class="cat-btn active" onclick="changeCategory('petroleo', this)">🛢️ Petróleo</button>
+            <button class="cat-btn" onclick="changeCategory('semiconductores', this)">💻 Semis</button>
+            <button class="cat-btn" onclick="changeCategory('software', this)">⚙️ Software</button>
+            <button class="cat-btn" onclick="changeCategory('bonos', this)">📜 Bonos</button>
+        </div>
+
+        <!-- Contenedor del desplazamiento -->
         <div class="scroll-container">
-            <div class="scroll-content">
-                <div class="news-item"><a href="https://www.tradingview.com/news/" target="_blank">1. La Reserva Federal mantiene tasas mientras evalúa inflación.</a></div>
-                <div class="news-item"><a href="https://www.tradingview.com/news/" target="_blank">2. Nvidia registra un incremento en ingresos por IA.</a></div>
-                <div class="news-item"><a href="https://www.tradingview.com/news/" target="_blank">3. El S&P 500 alcanza nuevos máximos tras resultados tecnológicos.</a></div>
-                <div class="news-item"><a href="https://www.tradingview.com/news/" target="_blank">4. Petróleo WTI retrocede ante aumento de reservas comerciales.</a></div>
-                <div class="news-item"><a href="https://www.tradingview.com/news/" target="_blank">5. Acciones de Apple muestran fortaleza tras demanda de nuevos dispositivos.</a></div>
-                <div class="news-item"><a href="https://www.tradingview.com/news/" target="_blank">6. Rendimiento del Bono a 10 años cae ligeramente.</a></div>
-                <div class="news-item"><a href="https://www.tradingview.com/news/" target="_blank">7. Amazon anuncia nuevas inversiones en centros de datos.</a></div>
-                <div class="news-item"><a href="https://www.tradingview.com/news/" target="_blank">8. Sector financiero sube tras balances bancarios trimestrales.</a></div>
-                <div class="news-item"><a href="https://www.tradingview.com/news/" target="_blank">9. Bitcoin se consolida en rangos clave de resistencia.</a></div>
-                <div class="news-item"><a href="https://www.tradingview.com/news/" target="_blank">10. El mercado de opciones registra alta actividad en contratos CALL.</a></div>
-                <div class="news-item"><a href="https://www.tradingview.com/news/" target="_blank">11. Meta Platforms acelera inversión en modelos abiertos de inteligencia artificial.</a></div>
-                <div class="news-item"><a href="https://www.tradingview.com/news/" target="_blank">12. Dólar se estabiliza frente a principales divisas internacionales.</a></div>
-                <div class="news-item"><a href="https://www.tradingview.com/news/" target="_blank">13. Empresas de Semiconductores muestran rebote técnico significativo.</a></div>
-                <div class="news-item"><a href="https://www.tradingview.com/news/" target="_blank">14. Ventas minoristas en EE.UU. superan expectativas en el último trimestre.</a></div>
-                <div class="news-item"><a href="https://www.tradingview.com/news/" target="_blank">15. Sector energía reacciona a decisiones operativas de la OPEP+.</a></div>
+            <div class="scroll-content" id="newsContent">
+                <!-- Se puebla mediante Javascript -->
             </div>
         </div>
     </div>
+
+    <script>
+        // Base de noticias organizadas por sector
+        const newsData = {
+            petroleo: [
+                { title: "1. Petróleo WTI se estabiliza tras decisión de producción de la OPEP+.", time: "Hace 10 min" },
+                { title: "2. Inventarios de crudo en EE.UU. caen más de lo esperado.", time: "Hace 25 min" },
+                { title: "3. Conflicto en Oriente Medio eleva la prima de riesgo en el sector energético.", time: "Hace 45 min" },
+                { title: "4. Refinerías globales aumentan margen de procesamiento en diésel.", time: "Hace 1 hora" },
+                { title: "5. Demanda de combustible de aviación alcanza máximos estacionales.", time: "Hace 2 horas" },
+                { title: "6. Chevron y Exxon reportan avance en proyectos offshore en Guyana.", time: "Hace 2 horas" },
+                { title: "7. Gas Natural sube por previsiones de clima frío en EE.UU. y Europa.", time: "Hace 3 horas" },
+                { title: "8. Exportaciones de crudo desde el Golfo de México marcan hito récord.", time: "Hace 4 horas" },
+                { title: "9. Precios del Brent mantienen soporte en rango clave técnico.", time: "Hace 5 horas" },
+                { title: "10. Inversores de energía reajustan coberturas mediante opciones PUT.", time: "Hace 6 horas" }
+            ],
+            semiconductores: [
+                { title: "1. Nvidia anuncia nueva arquitectura de chips para centros de datos e IA.", time: "Hace 5 min" },
+                { title: "2. TSMC incrementa capacidad de empaquetado avanzado para clientes clave.", time: "Hace 18 min" },
+                { title: "3. AMD lanza nuevos procesadores optimizados para servidores enterprise.", time: "Hace 40 min" },
+                { title: "4. ASML reporta sólido volumen de pedidos en sistemas EUV de litografía.", time: "Hace 1 hora" },
+                { title: "5. Broadcom experimenta fuerte demanda en soluciones de red de alta velocidad.", time: "Hace 2 horas" },
+                { title: "6. Intel acelera desarrollo en su nodo de fabricación 18A.", time: "Hace 3 horas" },
+                { title: "7. Qualcomm amplia presencia en chips para la industria automotriz.", time: "Hace 3 horas" },
+                { title: "8. Micron recibe impulso por alta demanda de memorias HBM3e.", time: "Hace 4 horas" },
+                { title: "9. Índice de Semiconductores de Filadelfia (SOX) prueba máximos históricos.", time: "Hace 5 horas" },
+                { title: "10. Cadencia y Synopsys suben ante mayor diseño de ASICs personalizados.", time: "Hace 6 horas" }
+            ],
+            software: [
+                { title: "1. Microsoft integra nuevas funciones de IA Copilot en entorno Cloud.", time: "Hace 12 min" },
+                { title: "2. Salesforce eleva sus perspectivas de ingresos anuales por suscripción.", time: "Hace 30 min" },
+                { title: "3. Oracle muestra crecimiento acelerado en su infraestructura de nube.", time: "Hace 50 min" },
+                { title: "4. Adobe expande herramientas creativas generativas para empresas.", time: "Hace 1 hora" },
+                { title: "5. ServiceNow reporta expansión en contratos de automatización de procesos.", time: "Hace 2 horas" },
+                { title: "6. CrowdStrike refuerza participación en seguridad en la nube multi-cloud.", time: "Hace 3 horas" },
+                { title: "7. Palantir gana contrato federal clave para integración de datos e IA.", time: "Hace 4 horas" },
+                { title: "8. Snowflake mejora estimaciones de consumo de plataforma de datos.", time: "Hace 4 horas" },
+                { title: "9. Datadog registra incremento de clientes de gran escala en supervisión APM.", time: "Hace 5 horas" },
+                { title: "10. MongoDB presenta mejoras de rendimiento en bases de datos vectoriales.", time: "Hace 6 horas" }
+            ],
+            bonos: [
+                { title: "1. Rendimiento del Bono a 10 años retrocede tras datos de inflación.", time: "Hace 8 min" },
+                { title: "2. Reserva Federal señala prudencia en próximas decisiones de tasas.", time: "Hace 20 min" },
+                { title: "3. Subasta de bonos a 30 años registra fuerte demanda de compradores extranjeros.", time: "Hace 35 min" },
+                { title: "4. Curva de rendimientos se empina a medida que se ajusta el tramo corto.", time: "Hace 1 hora" },
+                { title: "5. Rendimiento a 2 años reacciona a cifras del mercado laboral en EE.UU.", time: "Hace 2 horas" },
+                { title: "6. Deuda corporativa con grado de inversión mantiene diferenciales estrechos.", time: "Hace 3 horas" },
+                { title: "7. El BCE evalúa ritmo de flexibilización monetaria para próximos trimestres.", time: "Hace 4 horas" },
+                { title: "8. Bonos soberanos europeos (Bunds) cotizan con volatilidad contenida.", time: "Hace 5 horas" },
+                { title: "9. Entradas de capital hacia Fondos Monetarios marcan máximos anuales.", time: "Hace 5 horas" },
+                { title: "10. Expectativas de inflación a 5 años permanecen ancladas según datos del Fed.", time: "Hace 6 horas" }
+            ]
+        };
+
+        // Función para cambiar de categoría y reescribir los titulares
+        function changeCategory(catKey, btnElement) {
+            // Actualizar botones
+            const buttons = document.querySelectorAll('.cat-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            btnElement.classList.add('active');
+
+            // Cargar datos
+            const contentDiv = document.getElementById('newsContent');
+            const items = newsData[catKey] || [];
+            
+            let html = '';
+            items.forEach(item => {
+                html += `
+                    <div class="news-item">
+                        <div>${item.title}</div>
+                        <div class="news-time">${item.time}</div>
+                    </div>
+                `;
+            });
+
+            // Reiniciar animación al cambiar de pestaña
+            contentDiv.style.animation = 'none';
+            contentDiv.offsetHeight; // Refresco de DOM
+            contentDiv.innerHTML = html;
+            contentDiv.style.animation = 'scrollUp 35s linear infinite';
+        }
+
+        // Cargar categoría inicial (Petróleo)
+        document.addEventListener('DOMContentLoaded', () => {
+            const firstBtn = document.querySelector('.cat-btn');
+            changeCategory('petroleo', firstBtn);
+        });
+    </script>
+
+    </body>
+    </html>
     """
-    components.html(news_ticker_html, height=420)
+    components.html(news_ticker_html, height=390)
 
 # ---------------------------------------------------------
 # PESTAÑA 1: Estado del Bot
