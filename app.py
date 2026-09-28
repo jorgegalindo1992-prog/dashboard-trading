@@ -3,6 +3,8 @@ import streamlit.components.v1 as components
 import yfinance as yf
 import plotly.graph_objects as go
 import pandas as pd
+import feedparser
+import json
 
 # ---------------------------------------------------------
 # CONFIGURACIÓN DE PÁGINA Y ESTILO NEÓN
@@ -49,6 +51,35 @@ st.markdown("""
 
 st.title("🤖 BOT OPCIONES - DASHBOARD")
 
+# ---------------------------------------------------------
+# FUNCIÓN DE EXTRACCIÓN DE NOTICIAS EN TIEMPO REAL (RSS)
+# ---------------------------------------------------------
+@st.cache_data(ttl=300) # Se actualiza automáticamente cada 5 minutos
+def fetch_live_news():
+    rss_urls = {
+        "macro": "https://news.google.com/rss/search?q=US+economy+inflation+Federal+Reserve&hl=en-US&gl=US&ceid=US:en",
+        "petroleo": "https://news.google.com/rss/search?q=crude+oil+prices+OPEC&hl=en-US&gl=US&ceid=US:en",
+        "semiconductores": "https://news.google.com/rss/search?q=semiconductors+Nvidia+TSMC+chips&hl=en-US&gl=US&ceid=US:en",
+        "software": "https://news.google.com/rss/search?q=software+stocks+cloud+AI&hl=en-US&gl=US&ceid=US:en",
+        "bonos": "https://news.google.com/rss/search?q=US+Treasury+bonds+yields&hl=en-US&gl=US&ceid=US:en"
+    }
+    
+    live_data = {}
+    for cat, url in rss_urls.items():
+        feed = feedparser.parse(url)
+        items = []
+        for entry in feed.entries[:7]: # Tomamos las 7 más recientes por categoría
+            items.append({
+                "title": entry.title,
+                "url": entry.link,
+                "time": entry.published if hasattr(entry, 'published') else "Reciente"
+            })
+        live_data[cat] = items
+    return live_data
+
+# Carga noticias frescas
+news_data_live = fetch_live_news()
+
 # Navegación por pestañas principales
 tab_inicio, tab_bot, tab_mercado = st.tabs([
     "🏠 INICIO", 
@@ -57,27 +88,29 @@ tab_inicio, tab_bot, tab_mercado = st.tabs([
 ])
 
 # ---------------------------------------------------------
-# PESTAÑA INICIO: Cajón de Noticias con Scroll y Filtros
+# PESTAÑA INICIO: Cajón de Noticias con Scroll y Datos Reales
 # ---------------------------------------------------------
 with tab_inicio:
     st.subheader("Bienvenido al Panel Principal")
     st.write("Selecciona cualquiera de las pestañas superiores para ver el Estado del Bot o la Rotación de Mercado.")
 
-    news_ticker_html = """
+    news_data_json = json.dumps(news_data_live)
+
+    news_ticker_html = f"""
     <!DOCTYPE html>
     <html>
     <head>
     <style>
-        body {
+        body {{
             margin: 0;
             padding: 0;
             background-color: transparent;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             overflow: hidden;
-        }
-        .news-box {
+        }}
+        .news-box {{
             width: 100%;
-            max-width: 420px;
+            max-width: 450px;
             height: 380px;
             background-color: #161b22;
             border: 1px solid #30363d;
@@ -86,8 +119,8 @@ with tab_inicio:
             overflow: hidden;
             padding: 12px;
             box-sizing: border-box;
-        }
-        .news-header {
+        }}
+        .news-header {{
             font-size: 13px;
             font-weight: bold;
             color: #00e676;
@@ -95,8 +128,8 @@ with tab_inicio:
             display: flex;
             justify-content: space-between;
             align-items: center;
-        }
-        .category-bar {
+        }}
+        .category-bar {{
             display: flex;
             gap: 4px;
             border-bottom: 1px solid #30363d;
@@ -104,15 +137,15 @@ with tab_inicio:
             margin-bottom: 8px;
             overflow-x: auto;
             white-space: nowrap;
-        }
-        .category-bar::-webkit-scrollbar {
+        }}
+        .category-bar::-webkit-scrollbar {{
             height: 3px;
-        }
-        .category-bar::-webkit-scrollbar-thumb {
+        }}
+        .category-bar::-webkit-scrollbar-thumb {{
             background: #30363d;
             border-radius: 3px;
-        }
-        .cat-btn {
+        }}
+        .cat-btn {{
             background: #21262d;
             color: #8b949e;
             border: 1px solid #30363d;
@@ -122,71 +155,71 @@ with tab_inicio:
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s ease;
-        }
-        .cat-btn:hover {
+        }}
+        .cat-btn:hover {{
             color: #e6edf3;
             border-color: #8b949e;
-        }
-        .cat-btn.active {
+        }}
+        .cat-btn.active {{
             background: #00e676;
             color: #0b0e14;
             border-color: #00e676;
-        }
-        .scroll-container {
+        }}
+        .scroll-container {{
             height: 285px;
             overflow-y: hidden;
             position: relative;
-        }
-        .scroll-container:hover {
+        }}
+        .scroll-container:hover {{
             overflow-y: auto;
-        }
-        .scroll-container::-webkit-scrollbar {
+        }}
+        .scroll-container::-webkit-scrollbar {{
             width: 5px;
-        }
-        .scroll-container::-webkit-scrollbar-track {
+        }}
+        .scroll-container::-webkit-scrollbar-track {{
             background: #161b22;
-        }
-        .scroll-container::-webkit-scrollbar-thumb {
+        }}
+        .scroll-container::-webkit-scrollbar-thumb {{
             background: #30363d;
             border-radius: 4px;
-        }
-        .scroll-container::-webkit-scrollbar-thumb:hover {
+        }}
+        .scroll-container::-webkit-scrollbar-thumb:hover {{
             background: #00e676;
-        }
-        .scroll-content {
+        }}
+        .scroll-content {{
             position: absolute;
             width: 95%;
-            animation: scrollUp 40s linear infinite;
-        }
-        .scroll-container:hover .scroll-content {
+            animation: scrollUp 45s linear infinite;
+        }}
+        .scroll-container:hover .scroll-content {{
             animation-play-state: paused;
             position: relative;
-        }
-        @keyframes scrollUp {
-            0% { top: 100%; }
-            100% { top: -250%; }
-        }
-        .news-item {
+        }}
+        @keyframes scrollUp {{
+            0% {{ top: 100%; }}
+            100% {{ top: -250%; }}
+        }}
+        .news-item {{
             padding: 10px 0;
             border-bottom: 1px dashed #21262d;
             font-size: 12px;
             line-height: 1.4;
-        }
-        .news-link {
+        }}
+        .news-link {{
             color: #e6edf3;
             text-decoration: none;
             display: block;
             transition: color 0.2s;
-        }
-        .news-link:hover {
+        }}
+        .news-link:hover {{
             color: #00e676;
             text-decoration: underline;
-        }
-        .news-time {
+        }}
+        .news-time {{
             font-size: 10px;
             color: #8b949e;
             margin-top: 4px;
-        }
+        }}
     </style>
     </head>
     <body>
@@ -194,7 +227,7 @@ with tab_inicio:
     <div class="news-box">
         <div class="news-header">
             <span>📰 TITULARES EN VIVO</span>
-            <span style="font-size: 9px; color: #8b949e; background: #21262d; padding: 2px 6px; border-radius: 4px;">ÚLTIMA HORA</span>
+            <span style="font-size: 9px; color: #8b949e; background: #21262d; padding: 2px 6px; border-radius: 4px;">EN VIVO RSS</span>
         </div>
 
         <div class="category-bar">
@@ -211,65 +244,38 @@ with tab_inicio:
     </div>
 
     <script>
-        const newsData = {
-            macro: [
-                { title: "1. Datos del IPC y PCE en EE.UU.: Expectativas de tasas de interés de la Reserva Federal.", time: "Hace 10 min", url: "https://www.cnbc.com/us-economy/" },
-                { title: "2. Nóminas No Agrícolas (NFP) y datos de empleo en EE.UU.", time: "Hace 25 min", url: "https://www.reuters.com/business/us/" },
-                { title: "3. Decisiones de política monetaria y discursos de Jerome Powell.", time: "Hace 40 min", url: "https://www.bloomberg.com/economics" },
-                { title: "4. Indice de Confianza del Consumidor e indicadores manufactureros ISM.", time: "Hace 1 hora", url: "https://www.marketwatch.com/economy" }
-            ],
-            petroleo: [
-                { title: "1. Precios del Petróleo WTI y Brent reaccionan a recortes de producción de la OPEP+.", time: "Hace 15 min", url: "https://www.reuters.com/business/energy/" },
-                { title: "2. Informe semanal de inventarios de crudo de la EIA en Estados Unidos.", time: "Hace 35 min", url: "https://www.bloomberg.com/energy" },
-                { title: "3. Tensiones geopolíticas en Medio Oriente y su impacto en la oferta energética.", time: "Hace 1 hora", url: "https://www.cnbc.com/oil/" }
-            ],
-            semiconductores: [
-                { title: "1. Nvidia y el avance de chips para inteligencia artificial de nueva generación.", time: "Hace 12 min", url: "https://www.cnbc.com/technology/" },
-                { title: "2. TSMC reporta ingresos y demanda en nodos de aceleradores de IA.", time: "Hace 30 min", url: "https://www.reuters.com/technology/" },
-                { title: "3. AMD e Intel compiten por cuota de mercado en procesadores de centros de datos.", time: "Hace 50 min", url: "https://www.marketwatch.com/investing/stock/nvda" }
-            ],
-            software: [
-                { title: "1. Microsoft integra nuevas funciones de IA Copilot en suites corporativas.", time: "Hace 20 min", url: "https://www.cnbc.com/software/" },
-                { title: "2. Salesforce y Oracle muestran sólido crecimiento en ingresos por suscripción en la nube.", time: "Hace 45 min", url: "https://www.reuters.com/technology/" },
-                { title: "3. Ciberseguridad: Palo Alto Networks y CrowdStrike registran alta demanda empresarial.", time: "Hace 1 hora", url: "https://www.bloomberg.com/technology" }
-            ],
-            bonos: [
-                { title: "1. Rendimiento del Bono del Tesoro a 10 años (US10Y) ajusta posiciones.", time: "Hace 8 min", url: "https://www.cnbc.com/bonds/" },
-                { title: "2. Curva de tipos entre bonos a 2 y 10 años muestra variaciones de diferencial.", time: "Hace 28 min", url: "https://www.bloomberg.com/markets/rates-bonds" },
-                { title: "3. Subastas del Tesoro de EE.UU. registran demanda de inversores institucionales.", time: "Hace 55 min", url: "https://www.marketwatch.com/investing/bond/tmubmusd10y" }
-            ]
-        };
+        const newsData = {news_data_json};
 
-        function changeCategory(catKey, btnElement) {
+        function changeCategory(catKey, btnElement) {{
             const buttons = document.querySelectorAll('.cat-btn');
             buttons.forEach(btn => btn.classList.remove('active'));
-            btnElement.classList.add('active');
+            if(btnElement) btnElement.classList.add('active');
 
             const contentDiv = document.getElementById('newsContent');
             const items = newsData[catKey] || [];
             
             let html = '';
-            items.forEach(item => {
+            items.forEach((item, idx) => {{
                 html += `
                     <div class="news-item">
-                        <a href="${item.url}" target="_blank" class="news-link">
-                            ${item.title}
+                        <a href="${{item.url}}" target="_blank" class="news-link">
+                            ${{idx + 1}}. ${{item.title}}
                         </a>
-                        <div class="news-time">🕒 ${item.time}</div>
+                        <div class="news-time">🕒 ${{item.time}}</div>
                     </div>
                 `;
-            });
+            }});
 
             contentDiv.style.animation = 'none';
             contentDiv.offsetHeight;
             contentDiv.innerHTML = html;
-            contentDiv.style.animation = 'scrollUp 40s linear infinite';
-        }
+            contentDiv.style.animation = 'scrollUp 45s linear infinite';
+        }}
 
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', () => {{
             const firstBtn = document.querySelector('.cat-btn');
             changeCategory('macro', firstBtn);
-        });
+        }});
     </script>
 
     </body>
