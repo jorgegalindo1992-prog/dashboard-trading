@@ -17,7 +17,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# Estilos CSS
+# Estilos CSS Neón / Dark Mode
 st.markdown("""
     <style>
     .stApp {
@@ -54,9 +54,9 @@ st.markdown("""
 st.title("🤖 BOT OPCIONES - DASHBOARD")
 
 # ---------------------------------------------------------
-# EXTRACCIÓN Y ORDENAMIENTO CRONOLÓGICO DE NOTICIAS (MÁX. 10 DÍAS / 15 POR CATEGORÍA)
+# EXTRACCIÓN Y ORDENAMIENTO CRONOLÓGICO DE NOTICIAS
 # ---------------------------------------------------------
-@st.cache_data(ttl=300) # Se actualiza automáticamente cada 5 minutos (300 segundos)
+@st.cache_data(ttl=300)
 def fetch_live_news_es():
     rss_urls = {
         "macro": "https://news.google.com/rss/search?q=economia+EEUU+inflacion+Reserva+Federal+when:10d&hl=es-419&gl=US&ceid=US:es-419",
@@ -81,7 +81,6 @@ def fetch_live_news_es():
                 timestamp_sort = time.mktime(entry.published_parsed)
                 published_dt = datetime.fromtimestamp(timestamp_sort, tz=timezone.utc)
             
-            # Filtro adicional de seguridad para no superar los 10 días
             if published_dt and published_dt < limite_fecha:
                 continue
                 
@@ -92,15 +91,11 @@ def fetch_live_news_es():
                 "timestamp": timestamp_sort
             })
             
-        # Ordenar de más reciente (timestamp mayor) a más antigua (timestamp menor)
         temp_items.sort(key=lambda x: x["timestamp"], reverse=True)
-        
-        # Seleccionar las 15 noticias más recientes
         live_data[cat] = temp_items[:15]
         
     return live_data
 
-# Carga noticias frescas en español
 news_data_live = fetch_live_news_es()
 
 # Navegación por pestañas principales
@@ -122,7 +117,6 @@ with tab_inicio:
         st.info("📌 Las noticias se actualizan automáticamente en vivo (ordenadas de la más reciente a la más antigua, máx. 10 días).")
 
     with col_der:
-        # Espaciador vertical para ubicar el cajón abajo a la derecha
         st.markdown("<div style='height: 100px;'></div>", unsafe_allow_html=True)
         
         news_data_json = json.dumps(news_data_live)
@@ -264,7 +258,7 @@ with tab_inicio:
 
             <div class="category-bar">
                 <button class="cat-btn active" onclick="changeCategory('macro', this)">🌐 Macro</button>
-                <button class="cat-btn" onclick="changeCategory('petroleo', this)">🛢️ Petróleo</button>
+                <button class="cat-btn" onclick="changeCategory('petroleo', this)">🛢️️ Petróleo</button>
                 <button class="cat-btn" onclick="changeCategory('semiconductores', this)">💻 Semis</button>
                 <button class="cat-btn" onclick="changeCategory('software', this)">⚙️ Software</button>
                 <button class="cat-btn" onclick="changeCategory('bonos', this)">📜 Bonos</button>
@@ -316,16 +310,90 @@ with tab_inicio:
         components.html(news_ticker_html, height=420)
 
 # ---------------------------------------------------------
-# PESTAÑA 1: Estado del Bot
+# PESTAÑA 1: Estado del Bot (Alta Frecuencia - GGAL Opciones)
 # ---------------------------------------------------------
 with tab_bot:
-    st.subheader("Resumen General de Operativa")
-    c1, c2, c3, c4, c5 = st.columns(5)
-    c1.metric("GANANCIA DEL DÍA", "$ 18.430,00", "+ 8,72%")
-    c2.metric("GANANCIA DEL MES", "$ 156.750,00", "+ 31,35%")
-    c3.metric("GANANCIA TOTAL", "$ 278.940,00", "+ 55,78%")
-    c4.metric("OPERACIONES HOY", "7", "5 ganadas / 2 perdidas")
-    c5.metric("% ACIERTO (WINRATE)", "71.43%", "Alto rendimiento")
+    st.subheader("⚡ Resumen Operativo de Alta Frecuencia (Opciones GGAL)")
+    
+    # --- FILA 1: RENDIMIENTO ACUMULADO POR TEMPORALIDAD ---
+    st.markdown("##### 💵 Ganancias y Pérdidas Netas (PnL)")
+    m1, m2, m3, m4, m5 = st.columns(5)
+    m1.metric("PNL HOY", "$ 42.850,00", "+ 6,42%")
+    m2.metric("PNL ESTA SEMANA", "$ 185.300,00", "+ 14,20%")
+    m3.metric("PNL ESTE MES", "$ 620.400,00", "+ 32,80%")
+    m4.metric("PNL HISTÓRICO", "$ 1.840.500,00", "+ 94,15%")
+    m5.metric("COMISIONES HOY", "$ 8.120,00", "Broker + BYMA")
+
+    st.markdown("---")
+
+    # --- FILA 2: EFICIENCIA DE ESTRATEGIA (SCALPING 20s) ---
+    st.markdown("##### 🎯 Eficiencia & Métricas de Ejecución (Ciclo <= 20s)")
+    e1, e2, e3, e4, e5 = st.columns(5)
+    e1.metric("OPERACIONES HOY", "84 trades", "61 G / 23 P")
+    e2.metric("WIN RATE", "72,62%", "Objetivo > 65%")
+    e3.metric("DURACIÓN PROMEDIO", "14,8 seg", "Target <= 20s")
+    e4.metric("PROFIT FACTOR", "1,58", "Saludable")
+    e5.metric("SLIPPAGE PROMEDIO", "0,12%", "Normal")
+
+    st.markdown("---")
+
+    # --- FILA 3: RIESGO & LATENCIA API ---
+    st.markdown("##### 🛡️ Gestión de Riesgo & Conexión Broker")
+    r1, r2, r3, r4 = st.columns(4)
+    r1.metric("EFECTIVIDAD ZIG-ZAG", "81,2%", "% Confirmación 20s")
+    r2.metric("MAX DRAWDOWN HOY", "-$ 14.200,00", "- 1,85%")
+    r3.metric("LATENCIA API / ORDEN", "165 ms", "Matriz / API OK")
+    r4.metric("RACHA MÁXIMA GANADORA", "9 trades", "Consecutivos")
+
+    st.markdown("---")
+
+    # --- SECCIÓN GRÁFICA Y REGISTRO EN TIEMPO REAL ---
+    col_chart, col_table = st.columns([1.3, 1])
+
+    with col_chart:
+        st.markdown("##### 📈 Curva de Equity Intradía (Evolución $)")
+        
+        # Simulación de curva de patrimonio acumulado trade por trade
+        trades_sim = list(range(1, 26))
+        pnl_acumulado = [0, 1200, 2400, 1800, 3100, 4500, 4100, 5800, 7200, 6900, 
+                         8500, 10200, 12100, 11500, 13800, 15400, 18200, 17500, 19800, 
+                         22400, 26100, 25300, 28900, 34200, 42850]
+
+        fig_equity = go.Figure()
+        fig_equity.add_trace(go.Scatter(
+            x=trades_sim, 
+            y=pnl_acumulado,
+            mode='lines+markers',
+            name='Capital ($)',
+            line=dict(color='#00e676', width=2),
+            fill='tozeroy',
+            fillcolor='rgba(0, 230, 118, 0.08)'
+        ))
+        
+        fig_equity.update_layout(
+            template="plotly_dark",
+            paper_bgcolor="#161b22",
+            plot_bgcolor="#0b0e14",
+            margin=dict(l=20, r=20, t=20, b=20),
+            height=320,
+            xaxis_title="Número de Trade",
+            yaxis_title="Ganancia Acumulada ($)"
+        )
+        st.plotly_chart(fig_equity, use_container_width=True)
+
+    with col_table:
+        st.markdown("##### 📋 Últimas Operaciones Ejecutadas")
+        
+        # Tabla simulada de operaciones en tiempo real
+        df_trades = pd.DataFrame({
+            "Hora": ["15:42:10", "15:41:48", "15:41:25", "15:40:50", "15:40:12"],
+            "Especie": ["GFGC6000AB", "GFGC6000AB", "GFGP5800AB", "GFGC6000AB", "GFGC6000AB"],
+            "Tipo": ["CALL", "CALL", "PUT", "CALL", "CALL"],
+            "Duración": ["12s", "18s", "15s", "11s", "19s"],
+            "Resultado": ["+$ 1.850", "+$ 2.400", "-$ 920", "+$ 1.150", "+$ 3.100"]
+        })
+        
+        st.dataframe(df_trades, use_container_width=True, hide_index=True)
 
 # ---------------------------------------------------------
 # PESTAÑA 2: Rotación de Mercado + TradingView Heatmap + Matriz
